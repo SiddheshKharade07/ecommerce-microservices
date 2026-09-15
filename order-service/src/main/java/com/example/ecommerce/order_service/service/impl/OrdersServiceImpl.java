@@ -7,6 +7,7 @@ import com.example.ecommerce.order_service.entity.OrderStatus;
 import com.example.ecommerce.order_service.entity.Orders;
 import com.example.ecommerce.order_service.repository.OrdersRepository;
 import com.example.ecommerce.order_service.service.OrdersService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -44,8 +45,7 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    @Retry(name = "inventoryRetry", fallbackMethod = "createOrderFallBack")
-    @RateLimiter(name = "inventoryRateLimiter", fallbackMethod = "createOrderFallBack")
+    @CircuitBreaker(name = "inventoryCircuitBreaker", fallbackMethod = "createOrderFallBack")
     public OrderRequestDto createOrder(OrderRequestDto orderRequestDto) {
         log.info("Calling the createOrder method");
         Double totalPrice = inventoryFeignClient.reduceStocks(orderRequestDto).getBody();
