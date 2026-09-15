@@ -1,6 +1,7 @@
 package com.example.ecommerce.order_service.controller;
 
 import com.example.ecommerce.order_service.dto.OrderRequestDto;
+import com.example.ecommerce.order_service.dto.ShipmentRecordDto;
 import com.example.ecommerce.order_service.service.OrdersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,5 +47,11 @@ public class OrdersController {
         log.info("Fetching order with ID: {} via controller", id);
         OrderRequestDto order = ordersService.getOrderById(id);
         return ResponseEntity.ok(order);
+    }
+
+    @GetMapping("/shipment-status/{orderId}")
+    public ResponseEntity<ShipmentRecordDto> getShipmentStatus(@PathVariable Long orderId) {
+        ShipmentRecordDto shipmentRecordDto = ordersService.getShipmentStatus(orderId);
+        return ResponseEntity.ok(shipmentRecordDto);
     }
 }

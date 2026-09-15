@@ -1,13 +1,16 @@
 package com.example.ecommerce.order_service.service.impl;
 
 import com.example.ecommerce.order_service.clients.InventoryFeignClient;
+import com.example.ecommerce.order_service.clients.ShippingFeignClient;
 import com.example.ecommerce.order_service.dto.OrderRequestDto;
+import com.example.ecommerce.order_service.dto.ShipmentRecordDto;
 import com.example.ecommerce.order_service.entity.OrderItem;
 import com.example.ecommerce.order_service.entity.OrderStatus;
 import com.example.ecommerce.order_service.entity.Orders;
 import com.example.ecommerce.order_service.repository.OrdersRepository;
 import com.example.ecommerce.order_service.service.OrdersService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -24,6 +27,7 @@ public class OrdersServiceImpl implements OrdersService {
     private final OrdersRepository ordersRepository;
     private final ModelMapper modelMapper;
     private final InventoryFeignClient inventoryFeignClient;
+    private final ShippingFeignClient shippingFeignClient;
 
     @Override
     public List<OrderRequestDto> getAllOrders() {
@@ -80,10 +84,25 @@ public class OrdersServiceImpl implements OrdersService {
         return "Order Cancelled Successfully";
     }
 
+    @Override
+    @Retry(name = "shippingRetry", fallbackMethod = "getShipmentStatusFallBack")
+    @CircuitBreaker(name = "shippingCircuitBreaker", fallbackMethod = "getShipmentStatusFallBack")
+    public ShipmentRecordDto getShipmentStatus(Long orderId) {
+        log.info("getting shipment details for order ID: {}", orderId);
+        if(!ordersRepository.existsById(orderId)) throw new RuntimeException("Order does not exist with ID: " + orderId);
+
+        ShipmentRecordDto shipmentRecordDto = shippingFeignClient.getShipment(orderId).getBody();
+        return shipmentRecordDto;
+    }
+
+//    Fallback methods
+    public ShipmentRecordDto getShipmentStatusFallBack(Long orderId, Throwable throwable) {
+        log.error("fallback occurred due to : {}", throwable.getMessage());
+        return new ShipmentRecordDto();
+    }
 
     public OrderRequestDto createOrderFallBack(OrderRequestDto orderRequestDto, Throwable throwable) {
         log.error("fallback occurred due to : {}", throwable.getMessage());
-
         return new OrderRequestDto();
     }
 }
