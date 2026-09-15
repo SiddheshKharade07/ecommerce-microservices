@@ -12,4 +12,7 @@ public interface InventoryFeignClient {
 
     @PutMapping("/products/reduce-stocks")
     public ResponseEntity<Double> reduceStocks(@RequestBody OrderRequestDto orderRequestDto);
+
+    @PutMapping("/products/add-stocks")
+    public ResponseEntity<Void> addStocks(@RequestBody OrderRequestDto orderRequestDto);
 }

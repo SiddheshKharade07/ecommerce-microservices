@@ -12,4 +12,6 @@ public interface ProductService {
     ProductDto getProductById(Long id);
 
     Double reduceStocks(OrderRequestDto orderRequestDto);
+
+    void addStocks(OrderRequestDto orderRequestDto);
 }

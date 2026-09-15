@@ -28,6 +28,12 @@ public class OrdersController {
         return ResponseEntity.ok(orderRequestDtoResponse);
     }
 
+    @PutMapping("/cancel-order/{id}")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long id) {
+        String response = ordersService.cancelOrder(id);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
     public ResponseEntity<List<OrderRequestDto>> getAllOrders() {
         log.info("Fetching all orders via controller");

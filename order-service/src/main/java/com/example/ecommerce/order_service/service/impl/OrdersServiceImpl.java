@@ -8,14 +8,12 @@ import com.example.ecommerce.order_service.entity.Orders;
 import com.example.ecommerce.order_service.repository.OrdersRepository;
 import com.example.ecommerce.order_service.service.OrdersService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -51,7 +49,7 @@ public class OrdersServiceImpl implements OrdersService {
         Double totalPrice = inventoryFeignClient.reduceStocks(orderRequestDto).getBody();
 
         Orders orders = modelMapper.map(orderRequestDto, Orders.class);
-        for(OrderItem orderItem: orders.getItems()) {
+        for (OrderItem orderItem : orders.getItems()) {
             orderItem.setOrder(orders);
         }
 
@@ -62,6 +60,23 @@ public class OrdersServiceImpl implements OrdersService {
 
         return modelMapper.map(orders, OrderRequestDto.class);
     }
+
+    @Override
+    @Transactional
+    public String cancelOrder(Long id) {
+        log.info("Cancelling order");
+        Orders order = ordersRepository.findById(id).orElseThrow(() ->
+                new RuntimeException("Order not found with ID: " + id));
+        OrderRequestDto orderRequestDto = modelMapper.map(order, OrderRequestDto.class);
+
+        inventoryFeignClient.addStocks(orderRequestDto);
+
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        ordersRepository.save(order);
+
+        return "Order Cancelled Successfully";
+    }
+
 
     public OrderRequestDto createOrderFallBack(OrderRequestDto orderRequestDto, Throwable throwable) {
         log.error("fallback occurred due to : {}", throwable.getMessage());

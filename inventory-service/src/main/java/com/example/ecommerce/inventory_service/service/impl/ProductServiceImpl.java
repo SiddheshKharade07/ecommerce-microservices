@@ -52,16 +52,31 @@ public class ProductServiceImpl implements ProductService {
             Product product = productRepository.findById(productId).orElseThrow(() ->
                     new RuntimeException("product not found with ID: " + productId));
 
-            if(product.getStock() < quantity) {
+            if (product.getStock() < quantity) {
                 throw new RuntimeException("Product cannot be fulfilled for given quantity");
             }
 
-            product.setStock(product.getStock()-quantity);
+            product.setStock(product.getStock() - quantity);
             productRepository.save(product);
 
             totalPrice += quantity * product.getPrice();
         }
 
         return totalPrice;
+    }
+
+    @Override
+    @Transactional
+    public void addStocks(OrderRequestDto orderRequestDto) {
+        log.info("Adding the stocks");
+        for (OrderRequestItemDto orderRequestItemDto : orderRequestDto.getItems()) {
+            Product product = productRepository.findById(orderRequestItemDto.getProductId()).orElseThrow(() ->
+                    new RuntimeException("Product not found with ID: " + orderRequestItemDto.getProductId()));
+            product.setStock(product.getStock() + orderRequestItemDto.getQuantity());
+
+            productRepository.save(product);
+        }
+
+        log.info("Stocks added successfully");
     }
 }
