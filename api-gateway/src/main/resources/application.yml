@@ -18,6 +18,12 @@ spring:
               - Path=/api/v1/inventory/**
           filters:
               - StripPrefix=2
+        - id: shipping-service
+          uri: lb://SHIPPING-SERVICE
+          predicates:
+              - Path=/api/v1/shipping/**
+          filters:
+            - StripPrefix=2
 
 eureka:
   client:
