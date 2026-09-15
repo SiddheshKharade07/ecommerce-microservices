@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -62,11 +61,15 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    @Transactional
     public String cancelOrder(Long id) {
         log.info("Cancelling order");
         Orders order = ordersRepository.findById(id).orElseThrow(() ->
                 new RuntimeException("Order not found with ID: " + id));
+
+        if (order.getOrderStatus() != OrderStatus.PENDING && order.getOrderStatus() != OrderStatus.CONFIRMED) {
+            throw new RuntimeException("Order cannot be cancelled in status: " + order.getOrderStatus());
+        }
+
         OrderRequestDto orderRequestDto = modelMapper.map(order, OrderRequestDto.class);
 
         inventoryFeignClient.addStocks(orderRequestDto);
