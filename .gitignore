@@ -40,3 +40,6 @@ Thumbs.db
 
 # Build / IDE output
 out/
+
+# Local tools
+zipkin/
