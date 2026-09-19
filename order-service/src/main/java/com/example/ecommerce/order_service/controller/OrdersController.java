@@ -5,12 +5,15 @@ import com.example.ecommerce.order_service.dto.ShipmentRecordDto;
 import com.example.ecommerce.order_service.service.OrdersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Slf4j
+@RefreshScope
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/core")
@@ -18,9 +21,12 @@ public class OrdersController {
 
     private final OrdersService ordersService;
 
+    @Value("${my.variable}")
+    private String myVariable;
+
     @GetMapping("/helloOrders")
     public String helloOrders(@RequestHeader(name = "X-User-Id") Long userId) {
-        return "Hello From Order Service";
+        return "Hello From Order Service, have a good day ahead! " + myVariable;
     }
 
     @PostMapping("/create-order")
